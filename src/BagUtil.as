@@ -1,4 +1,5 @@
 
+import com.Components.ItemSlot;
 import com.GameInterface.DistributedValue;
 import com.GameInterface.InventoryItem;
 import com.GameInterface.ShopInterface;
@@ -24,6 +25,7 @@ class BagUtil
 	private var m_OpenBagsValue:String;
 	private var m_itemSellCount:Number = 0;
 	private var m_itemsToSell:Array = [];
+	private var m_itemsToOpen:Array = [];
 	
 	
 	public static function main(swfRoot:MovieClip):Void 
@@ -106,14 +108,16 @@ class BagUtil
 		m_sellButton._visible = false;
 	}
 	
-	private function ItemIsSafeToSell(item:InventoryItem, includeExtraordinaries:Boolean):Boolean
+	private function ItemIsSafeToSell(item:InventoryItem, extraordinariesOnly:Boolean):Boolean
 	{
 		if (item.m_Pips != 1 && item.m_Pips != 2) return false; //Only include 1 or 2 pip items
 		if (item.m_Rarity != 2) return false; //Non-commons
 		if (item.m_Rank != 1) return false; //Only include items at rank 1 (unranked)
 		if (item.m_XP != 0) return false; //XP (mostly redundant with rank for commons)
 		if (item.m_IsBoundToPlayer) return false; //Bound items
-		if (item.m_ColorLine == 43 && !includeExtraordinaries) return false; //Extraordinary items (43 seems to indicate the red background?)
+		//ColorLine = 43 Extraordinary items (red background?)
+		if (item.m_ColorLine != 43 && extraordinariesOnly) return false;
+		if (item.m_ColorLine == 43 && !extraordinariesOnly) return false;
 		return true;
 	}
 		
@@ -147,22 +151,23 @@ class BagUtil
 		for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
 		for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
 		{
-			var itemSlot/*:ItemSlot*/ = defaultBag.GetItemAtGridPosition(new Point(j, i));
+			var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
 			
-			if (itemSlot != undefined && ItemIsSafeToSell(itemSlot.GetData(), false))
+			if (item != undefined && ItemIsSafeToSell(item, false))
 			{
-				m_itemsToSell.push(itemSlot);
+				m_itemsToSell.push(item);
 			}
 		}
 		//Second loop for extraordinaries (if we sell them last, they'll show up in buyback in the off chance it was incorrectly-sold)
 		for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
 		for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
 		{
-			var itemSlot/*:ItemSlot*/ = defaultBag.GetItemAtGridPosition(new Point(j, i));
+			var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
 			
-			if (itemSlot != undefined && ItemIsSafeToSell(itemSlot.GetData(), true))
+			if (item != undefined && ItemIsSafeToSell(item, true))
 			{
-				m_itemsToSell.push(itemSlot);
+				com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Items: "+m_itemsToSell.length + ":" + item.m_Name, 0);
+				m_itemsToSell.push(item);
 			}
 		}
 		m_itemSellCount = m_itemsToSell.length;
@@ -170,10 +175,10 @@ class BagUtil
 	
 	function SellItems()
 	{
-		var itemSlot/*:ItemSlot*/ = m_itemsToSell.shift();
-		if (itemSlot != undefined)
+		var item:InventoryItem = InventoryItem(m_itemsToSell.shift());
+		if (item != undefined)
 		{
-			m_OpenShop.SellItem(m_Inventory.GetInventoryID(), itemSlot.GetSlotID());
+			m_OpenShop.SellItem(m_Inventory.GetInventoryID(), item.m_InventoryPos);
 			setTimeout(Delegate.create(this, SellItems), 50);
 		}
 		else
@@ -186,6 +191,7 @@ class BagUtil
 		}
 	}
 	
+	var beee;
 	function OpenBagsCommand()
 	{
 		var value:String = m_openBagsCommand.GetValue();
@@ -196,6 +202,22 @@ class BagUtil
 			OpenBags();
 		}
 	}
+	private function ShouldOpenItem(item:InventoryItem):Boolean
+	{
+		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "weapon") && item.m_Name == "Weapon Reward Bag")
+		{
+			return true;
+		}
+		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "talisman") && item.m_Name == "Talisman Reward Bag")
+		{
+			return true;
+		}
+		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "glyph") && item.m_Name == "Glyph Reward Bag")
+		{
+			return true;
+		}
+		return false;
+	}
 	
 	function OpenBags()
 	{
@@ -204,64 +226,35 @@ class BagUtil
 			com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Inventory full, stopping.", 0);
 			return;
 		}
-		var continueOpening = false;
 		
+		var continueOpening:Boolean = false;
 		var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
 		if (m_OpenBagsValue == "all" || m_OpenBagsValue == "weapon")
 		{
 			for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
 			for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
 			{
-				var itemSlot/*:ItemSlot*/ = defaultBag.GetItemAtGridPosition(new Point(j, i));
+				var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
 				
-				if (itemSlot != undefined && itemSlot.GetData().m_Name == "Weapon Reward Bag")
+				if (item != undefined && ShouldOpenItem(item))
 				{
-					m_Inventory.UseItem(itemSlot.GetSlotID());
-					i = defaultBag.GetNumRows();
+					if (item.m_CooldownEnd < com.GameInterface.Utils.GetGameTime())
+					{
+						//com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Debug:" + item.m_Name + ":" + item.m_StackSize, 0);
+						m_Inventory.UseItem(item.m_InventoryPos);
+					}
 					continueOpening = true;
-					break;
 				}
 			}
 		}
-		if (m_OpenBagsValue == "all" || m_OpenBagsValue == "talisman")
-		{
-			for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
-			for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
-			{
-				var itemSlot/*:ItemSlot*/ = defaultBag.GetItemAtGridPosition(new Point(j, i));
-				
-				if (itemSlot != undefined && itemSlot.GetData().m_Name == "Talisman Reward Bag")
-				{
-					m_Inventory.UseItem(itemSlot.GetSlotID());
-					i = defaultBag.GetNumRows();
-					continueOpening = true;
-					break;
-				}
-			}
-		}
-		if (m_OpenBagsValue == "all" || m_OpenBagsValue == "glyph")
-		{
-			for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
-			for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
-			{
-				var itemSlot/*:ItemSlot*/ = defaultBag.GetItemAtGridPosition(new Point(j, i));
-				
-				if (itemSlot != undefined && itemSlot.GetData().m_Name == "Glyph Reward Bag")
-				{
-					m_Inventory.UseItem(itemSlot.GetSlotID());
-					i = defaultBag.GetNumRows();
-					continueOpening = true;
-					break;
-				}
-			}
-		}
+		
 		if (continueOpening)
 		{
-			setTimeout(Delegate.create(this, OpenBags), 2000);
+			setTimeout(Delegate.create(this, OpenBags), 200);
 		}
 		else
 		{
-			com.GameInterface.Chat.SignalShowFIFOMessage.Emit("No more bags found to open, stopping.", 0);
+			com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Open Complete.", 0);
 		}
 	}
 }
