@@ -164,7 +164,6 @@ class BagUtil
 			
 			if (item != undefined && ItemIsSafeToSell(item, true))
 			{
-				com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Items: "+m_itemsToSell.length + ":" + item.m_Name, 0);
 				m_itemsToSell.push(item);
 			}
 		}
