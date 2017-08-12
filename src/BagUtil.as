@@ -1,5 +1,3 @@
-
-import com.Components.ItemSlot;
 import com.GameInterface.DistributedValue;
 import com.GameInterface.InventoryItem;
 import com.GameInterface.ShopInterface;
@@ -240,7 +238,6 @@ class BagUtil
 				{
 					if (item.m_CooldownEnd < com.GameInterface.Utils.GetGameTime())
 					{
-						//com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Debug:" + item.m_Name + ":" + item.m_StackSize, 0);
 						m_Inventory.UseItem(item.m_InventoryPos);
 					}
 					continueOpening = true;
