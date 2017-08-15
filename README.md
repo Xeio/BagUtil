@@ -1,6 +1,6 @@
 # BagUtil
 
-Addon designed to make opening and selling junk bags from question in *Secret World Legends* easier!
+Addon designed to make opening and selling junk bags from questing in *Secret World Legends* easier!
 
 BagUtil adds two buttons to the default inventory window. **Open** and **Sell**.
 
