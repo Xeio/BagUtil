@@ -25,6 +25,9 @@ class BagUtil
 	private var m_itemsToSell:Array = [];
 	private var m_itemsToOpen:Array = [];
 	
+	static var TALISMAN_BAGS:Array = ["Talisman Reward Bag", "Talisman-Belohnungstasche", "Sac de récompense - talisman"];
+	static var WEAPON_BAGS:Array = ["Weapon Reward Bag", "Waffen-Belohnungstasche", "Sac de récompense - arme"];
+	static var GLYPH_BAGS:Array = ["Glyph Reward Bag", "Glyphen-Belohnungstasche", "Glyphenbelohnungstasche", "Sac de glyphes en récompense"];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -201,15 +204,15 @@ class BagUtil
 	}
 	private function ShouldOpenItem(item:InventoryItem):Boolean
 	{
-		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "weapon") && item.m_Name == "Weapon Reward Bag")
+		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "weapon") && Utils.Contains(WEAPON_BAGS, item.m_Name))
 		{
 			return true;
 		}
-		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "talisman") && item.m_Name == "Talisman Reward Bag")
+		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "talisman") && Utils.Contains(TALISMAN_BAGS, item.m_Name))
 		{
 			return true;
 		}
-		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "glyph") && item.m_Name == "Glyph Reward Bag")
+		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "glyph") && Utils.Contains(GLYPH_BAGS, item.m_Name))
 		{
 			return true;
 		}
