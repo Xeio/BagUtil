@@ -27,7 +27,7 @@ class BagUtil
 	
 	static var TALISMAN_BAGS:Array = ["Talisman Reward Bag", "Talisman-Belohnungstasche", "Sac de récompense - talisman"];
 	static var WEAPON_BAGS:Array = ["Weapon Reward Bag", "Waffen-Belohnungstasche", "Sac de récompense - arme"];
-	static var GLYPH_BAGS:Array = ["Glyph Reward Bag", "Glyphen-Belohnungstasche", "Glyphenbelohnungstasche", "Sac de glyphes en récompense"];
+	static var GLYPH_BAGS:Array = ["Glyph Reward Bag", "Glyphen-Belohnungstasche", "Glyphenbelohnungstasche", "Sac de glyphes en récompense", "Sac de récompense de glyphe"];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
