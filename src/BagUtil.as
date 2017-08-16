@@ -109,17 +109,20 @@ class BagUtil
 		m_sellButton._visible = false;
 	}
 	
-	private function ItemIsSafeToSell(item:InventoryItem, extraordinariesOnly:Boolean):Boolean
+	private function ItemIsSafeToSell(item:InventoryItem):Boolean
 	{
 		if (item.m_Pips != 1 && item.m_Pips != 2) return false; //Only include 1 or 2 pip items
 		if (item.m_Rarity != 2) return false; //Non-commons
 		if (item.m_Rank != 1) return false; //Only include items at rank 1 (unranked)
 		if (item.m_XP != 0) return false; //XP (mostly redundant with rank for commons)
 		if (item.m_IsBoundToPlayer) return false; //Bound items
-		//ColorLine = 43 Extraordinary items (red background?)
-		if (item.m_ColorLine != 43 && extraordinariesOnly) return false;
-		if (item.m_ColorLine == 43 && !extraordinariesOnly) return false;
 		return true;
+	}
+	
+	private function ItemIsExtraordinary(item:InventoryItem)
+	{
+		//ColorLine = 43 Extraordinary items (red background?)
+		return item.m_ColorLine == 43;
 	}
 		
 	function OnOpenShop(shopInterface:ShopInterface)
@@ -156,18 +159,15 @@ class BagUtil
 			
 			if (item != undefined && ItemIsSafeToSell(item, false))
 			{
-				m_itemsToSell.push(item);
-			}
-		}
-		//Second loop for extraordinaries (if we sell them last, they'll show up in buyback in the off chance it was incorrectly-sold)
-		for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
-		for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
-		{
-			var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
-			
-			if (item != undefined && ItemIsSafeToSell(item, true))
-			{
-				m_itemsToSell.push(item);
+				if (ItemIsExtraordinary(item))
+				{
+					//Extraordinaries go to the end of the list rather than the start so they sell last
+					m_itemsToSell.push(item);
+				}
+				else
+				{
+					m_itemsToSell.unshift(item);
+				}
 			}
 		}
 		m_itemSellCount = m_itemsToSell.length;
@@ -229,21 +229,20 @@ class BagUtil
 		
 		var continueOpening:Boolean = false;
 		var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
-		if (m_OpenBagsValue == "all" || m_OpenBagsValue == "weapon")
+		for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
+		for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
 		{
-			for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
-			for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
+			var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
+			
+			if (item != undefined && ShouldOpenItem(item))
 			{
-				var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
-				
-				if (item != undefined && ShouldOpenItem(item))
+				if (item.m_CooldownEnd < com.GameInterface.Utils.GetGameTime())
 				{
-					if (item.m_CooldownEnd < com.GameInterface.Utils.GetGameTime())
-					{
-						m_Inventory.UseItem(item.m_InventoryPos);
-					}
-					continueOpening = true;
+					m_Inventory.UseItem(item.m_InventoryPos);
+					setTimeout(Delegate.create(this, OpenBags), 200);
+					return;
 				}
+				continueOpening = true;
 			}
 		}
 		
