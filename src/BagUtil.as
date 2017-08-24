@@ -96,14 +96,14 @@ class BagUtil
 		var x = _root.backpack2.InvBackground0.m_BottomBar;
 		
 		m_openButton = x.attachMovie("ChromeButtonDark", "m_openButton", x.getNextHighestDepth(), {_x:x.m_TokenButton._x - 55, _y:x.m_TokenButton._y});
+		m_openButton.disableFocus = true;
 		m_openButton.textField.text = "Open";
-		m_openButton.onSetFocus = Delegate.create(this, function() { Selection.setFocus(null); } );
 		m_openButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("all"); } );
 		m_openButton._width = 50;
 		
 		m_sellButton = x.attachMovie("ChromeButtonDark", "m_sellButton", x.getNextHighestDepth(), {_x:x.m_TokenButton._x - 110, _y:x.m_TokenButton._y});
+		m_sellButton.disableFocus = true;
 		m_sellButton.textField.text = "Sell";
-		m_sellButton.onSetFocus = Delegate.create(this, function() { Selection.setFocus(null); } );
 		m_sellButton.onMousePress = Delegate.create(this, function() { this.m_sellItemsCommand.SetValue(true); } );
 		m_sellButton._width = 50;
 		m_sellButton._visible = false;
