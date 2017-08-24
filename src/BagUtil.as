@@ -145,7 +145,7 @@ class BagUtil
 		{
 			m_sellItemsCommand.SetValue(undefined);
 			BuildSellList();
-			SellItems();
+			setTimeout(Delegate.create(this, SellItems), 500);
 		}
 	}
 	
