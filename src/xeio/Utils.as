@@ -1,4 +1,4 @@
-class Utils
+class xeio.Utils
 {
 	public static function Contains(array:Array, target):Boolean
 	{
