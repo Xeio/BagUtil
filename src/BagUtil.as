@@ -233,11 +233,12 @@ class BagUtil
 		for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
 		for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
 		{
-			var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
+			var itemSlot = defaultBag.GetItemAtGridPosition(new Point(j, i));
+			var item:InventoryItem = itemSlot.GetData();
 			
 			if (item != undefined && ShouldOpenItem(item))
 			{
-				if (item.m_CooldownEnd < com.GameInterface.Utils.GetGameTime())
+				if (!itemSlot.GetSlotMC().item.m_HasCooldown)
 				{
 					m_Inventory.UseItem(item.m_InventoryPos);
 					setTimeout(Delegate.create(this, OpenBags), 200);
