@@ -1,9 +1,12 @@
 import xeio.Utils;
 import com.GameInterface.DistributedValue;
 import com.GameInterface.InventoryItem;
+import com.GameInterface.Game.Character;
 import com.GameInterface.ShopInterface;
+import com.Utils.LDBFormat;
 import flash.geom.Point;
 import mx.utils.Delegate;
+import com.Utils.Text;
 import com.Utils.Archive;
 
 import com.GameInterface.Game.CharacterBase;
@@ -25,6 +28,8 @@ class BagUtil
 	private var m_itemSellCount:Number = 0;
 	private var m_itemsToSell:Array = [];
 	private var m_itemsToOpen:Array = [];
+	private var m_storedSignalListeners:Array;
+	private var m_storedTokenTotals:Array;
 	
 	static var TALISMAN_BAGS:Array = ["Talisman Reward Bag", "Talisman-Belohnungstasche", "Sac de récompense - talisman"];
 	static var WEAPON_BAGS:Array = ["Weapon Reward Bag", "Waffen-Belohnungstasche", "Sac de récompense - arme"];
@@ -146,8 +151,27 @@ class BagUtil
 		{
 			m_sellItemsCommand.SetValue(undefined);
 			BuildSellList();
+			
+			//It's slow to have all the currency listeners trigger while selling, so just... stop them... for now.
+			var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
+			m_storedSignalListeners = character.SignalTokenAmountChanged["m_EventList"];
+			character.SignalTokenAmountChanged["m_EventList"] = new Array();
+			m_storedTokenTotals = new Array();
+			character.SignalTokenAmountChanged.Connect(SlotTokenChanged, this);
+			
 			setTimeout(Delegate.create(this, SellItems), 500);
 		}
+	}
+	
+	private function SlotTokenChanged(tokenID:Number, newAmount:Number, oldAmount:Number)
+	{
+		//Store any currency events to fire at the end of the sell action
+		if (!m_storedTokenTotals[tokenID])
+		{
+			m_storedTokenTotals[tokenID] = new Object();
+			m_storedTokenTotals[tokenID].oldAmount = oldAmount;
+		}
+		m_storedTokenTotals[tokenID].newAmount = newAmount;
 	}
 	
 	function BuildSellList()
@@ -184,7 +208,17 @@ class BagUtil
 		}
 		else
 		{
-			com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Items sold: " + m_itemSellCount, 0);
+			//Restore the token change signals, and emit the "final" change values
+			var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
+			character.SignalTokenAmountChanged["m_EventList"] = m_storedSignalListeners;
+			for (var tokenType in m_storedTokenTotals)
+			{
+				character.SignalTokenAmountChanged.Emit(tokenType, m_storedTokenTotals[tokenType].newAmount, m_storedTokenTotals[tokenType].oldAmount);
+			}
+			
+			var sellTotal = (m_storedTokenTotals[_global.Enums.Token.e_Cash].newAmount - m_storedTokenTotals[_global.Enums.Token.e_Cash].oldAmount) || 0;
+			com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Sold " + m_itemSellCount + " item(s) for " + Text.AddThousandsSeparator(sellTotal) + " " + LDBFormat.LDBGetText("Tokens", "Token" + _global.Enums.Token.e_Cash) + ".", 0);
+			
 			if (m_itemSellCount > 0)
 			{
 				com.GameInterface.Game.Character.GetClientCharacter().AddEffectPackage("sound_fxpackage_GUI_trade_success.xml");
@@ -192,7 +226,6 @@ class BagUtil
 		}
 	}
 	
-	var beee;
 	function OpenBagsCommand()
 	{
 		var value:String = m_openBagsCommand.GetValue();
