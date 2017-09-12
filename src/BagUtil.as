@@ -31,9 +31,9 @@ class BagUtil
 	private var m_storedSignalListeners:Array;
 	private var m_storedTokenTotals:Array;
 	
-	static var TALISMAN_BAGS:Array = ["Talisman Reward Bag", "Talisman-Belohnungstasche", "Sac de récompense - talisman"];
-	static var WEAPON_BAGS:Array = ["Weapon Reward Bag", "Waffen-Belohnungstasche", "Sac de récompense - arme"];
-	static var GLYPH_BAGS:Array = ["Glyph Reward Bag", "Glyphen-Belohnungstasche", "Glyphenbelohnungstasche", "Sac de glyphes en récompense", "Sac de récompense de glyphe"];
+	static var TALISMAN_BAGS:Array = [LDBFormat.LDBGetText(50200, 9264943)];
+	static var WEAPON_BAGS:Array = [LDBFormat.LDBGetText(50200, 9289681)];
+	static var GLYPH_BAGS:Array = [LDBFormat.LDBGetText(50200, 7719874), LDBFormat.LDBGetText(50200, 9284361)];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
