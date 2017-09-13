@@ -30,6 +30,8 @@ class BagUtil
 	private var m_itemsToOpen:Array = [];
 	private var m_storedSignalListeners:Array;
 	private var m_storedTokenTotals:Array;
+    private var m_resetListsFunction:Function;
+    private var m_LayoutFunction:Function;
 	
 	static var TALISMAN_BAGS:Array = [LDBFormat.LDBGetText(50200, 9264943)];
 	static var WEAPON_BAGS:Array = [LDBFormat.LDBGetText(50200, 9289681)];
@@ -158,6 +160,10 @@ class BagUtil
 			character.SignalTokenAmountChanged["m_EventList"] = new Array();
 			m_storedTokenTotals = new Array();
 			character.SignalTokenAmountChanged.Connect(SlotTokenChanged, this);
+            m_resetListsFunction = _root.shopcontroller.m_Window.m_Content.ResetList;
+            _root.shopcontroller.m_Window.m_Content.ResetList = undefined;
+            m_LayoutFunction = _root.shopcontroller.m_Window.m_Content.Layout;
+            _root.shopcontroller.m_Window.m_Content.Layout = undefined;
 			
 			setTimeout(Delegate.create(this, SellItems), 500);
 		}
@@ -209,6 +215,8 @@ class BagUtil
 		else
 		{
 			//Restore the token change signals, and emit the "final" change values
+            _root.shopcontroller.m_Window.m_Content.ResetList = m_resetListsFunction;
+            _root.shopcontroller.m_Window.m_Content.Layout = m_LayoutFunction;
 			var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
 			character.SignalTokenAmountChanged["m_EventList"] = m_storedSignalListeners;
 			for (var tokenType in m_storedTokenTotals)
