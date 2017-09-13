@@ -201,7 +201,7 @@ class BagUtil
 	function SellItems()
 	{
 		var item:InventoryItem = InventoryItem(m_itemsToSell.shift());
-		if (item != undefined)
+		if (item && m_OpenShop)
 		{
 			m_OpenShop.SellItem(m_Inventory.GetInventoryID(), item.m_InventoryPos);
 			setTimeout(Delegate.create(this, SellItems), 50);
