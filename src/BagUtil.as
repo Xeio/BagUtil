@@ -17,13 +17,18 @@ class BagUtil
 {    
 	private var m_swfRoot: MovieClip;
 	
-	private var m_openButton: MovieClip
+	private var m_openDropdownButton: MovieClip
+	private var m_openWeaponsBagsButton: MovieClip
+	private var m_openTalismansBagsButton: MovieClip
+	private var m_openGlyphsBagsButton: MovieClip
+	private var m_openAllBagsButton: MovieClip
 	private var m_sellButton: MovieClip
+	
+	private var m_openBagsCommand:DistributedValue;
+	private var m_sellItemsCommand:DistributedValue;
 	
 	private var m_Inventory:Inventory;
 	private var m_OpenShop:ShopInterface;
-	private var m_openBagsCommand:DistributedValue;
-	private var m_sellItemsCommand:DistributedValue;
 	private var m_OpenBagsValue:String;
 	private var m_itemSellCount:Number = 0;
 	private var m_itemsToSell:Array = [];
@@ -74,8 +79,16 @@ class BagUtil
 	
 	public function OnUnload()
 	{
-		m_openButton.removeMovieClip(); 
-		m_openButton = undefined;
+		m_openDropdownButton.removeMovieClip(); 
+		m_openDropdownButton = undefined;
+		m_openWeaponsBagsButton.removeMovieClip();
+		m_openWeaponsBagsButton = undefined;
+		m_openTalismansBagsButton.removeMovieClip();
+		m_openTalismansBagsButton = undefined;
+		m_openGlyphsBagsButton.removeMovieClip();
+		m_openGlyphsBagsButton = undefined;
+		m_openAllBagsButton.removeMovieClip();
+		m_openAllBagsButton = undefined;
 		m_sellButton.removeMovieClip();
 		m_sellButton = undefined;
 		
@@ -103,18 +116,25 @@ class BagUtil
 	{
 		var x = _root.backpack2.InvBackground0.m_BottomBar;
 		
-		m_openButton = x.attachMovie("ChromeButtonDark", "m_openButton", x.getNextHighestDepth(), {_x:x.m_TokenButton._x - 55, _y:x.m_TokenButton._y});
-		m_openButton.disableFocus = true;
-		m_openButton.textField.text = "Open";
-		m_openButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("all"); } );
-		m_openButton._width = 50;
+		var btnWidth = 65;
 		
-		m_sellButton = x.attachMovie("ChromeButtonDark", "m_sellButton", x.getNextHighestDepth(), {_x:x.m_TokenButton._x - 110, _y:x.m_TokenButton._y});
-		m_sellButton.disableFocus = true;
-		m_sellButton.textField.text = "Sell";
-		m_sellButton.onMousePress = Delegate.create(this, function() { this.m_sellItemsCommand.SetValue(true); } );
-		m_sellButton._width = 50;
-		m_sellButton._visible = false;
+		m_openDropdownButton = CreateButton(x, "m_openButton", btnWidth, 5, 0, "Open...", true);
+		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(true); } );
+		
+		m_openWeaponsBagsButton = CreateButton(x, "m_openWeaponsBagsButton", btnWidth, 5, 25, "Weapons", false);
+ 		m_openWeaponsBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("weapon"); } );
+
+		m_openTalismansBagsButton = CreateButton(x, "m_openTalismansBagsButton", btnWidth, 5, 50, "Talismans", false);
+ 		m_openTalismansBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("talisman"); } );
+		
+		m_openGlyphsBagsButton = CreateButton(x, "m_openGlyphsBagsButton", btnWidth, 5, 75, "Glyphs", false);
+		m_openGlyphsBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("glyph"); } );
+		
+		m_openAllBagsButton = CreateButton(x, "m_openAllBagsButton", btnWidth, 5, 100, "All", false);
+ 		m_openAllBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("all"); } );
+		
+		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
+ 		m_sellButton.onMousePress = Delegate.create(this, function() { this.m_sellItemsCommand.SetValue(true); } );
 	}
 	
 	private function ItemIsSafeToSell(item:InventoryItem):Boolean
@@ -241,6 +261,8 @@ class BagUtil
 		{
 			m_OpenBagsValue = value.toLowerCase();
 			m_openBagsCommand.SetValue(undefined);
+			SetDropdownOpen(false);
+			
 			OpenBags();
 		}
 	}
@@ -265,7 +287,7 @@ class BagUtil
 	{
 		if (m_Inventory.GetFirstFreeItemSlot() == -1)
 		{
-			com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Inventory full, stopping.", 0);
+			OpenBagsEnded("Inventory full, stopping.");
 			return;
 		}
 		
@@ -295,7 +317,36 @@ class BagUtil
 		}
 		else
 		{
-			com.GameInterface.Chat.SignalShowFIFOMessage.Emit("Open Complete.", 0);
+			OpenBagsEnded("Open Complete.");
+		}
+	}
+	
+	function CreateButton(root, name:String, btnWidth:Number, offsetX:Number, offsetY:Number, text:String, visible:Boolean) : MovieClip
+	{
+		var btn = root.attachMovie("ChromeButtonDark", name, root.getNextHighestDepth(), {_x:root.m_TokenButton._x - btnWidth - offsetX, _y:root.m_TokenButton._y - offsetY});
+		btn.disableFocus = true;
+		btn.textField.text = text;
+		btn._width = btnWidth;
+		btn._visible = visible;
+		return btn;
+	}
+	
+	function OpenBagsEnded(reason:String)
+	{
+		com.GameInterface.Chat.SignalShowFIFOMessage.Emit(reason, 0);
+		
+		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(false); } );
+	}
+	
+	function SetDropdownOpen(open:Boolean)
+	{
+		if (open != undefined)
+		{
+			m_openWeaponsBagsButton._visible = open;
+			m_openTalismansBagsButton._visible = open;
+			m_openGlyphsBagsButton._visible = open;
+			m_openAllBagsButton._visible = open;
+			m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(!open); } );
 		}
 	}
 }
