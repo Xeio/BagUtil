@@ -22,14 +22,17 @@ class BagUtil
 	private var m_openTalismansBagsButton: MovieClip
 	private var m_openGlyphsBagsButton: MovieClip
 	private var m_openAllBagsButton: MovieClip
+	private var m_stopOpeningButton: MovieClip
 	private var m_sellButton: MovieClip
 	
 	private var m_openBagsCommand:DistributedValue;
+	private var m_stopOpeningCommand:DistributedValue;
 	private var m_sellItemsCommand:DistributedValue;
 	
 	private var m_Inventory:Inventory;
 	private var m_OpenShop:ShopInterface;
 	private var m_OpenBagsValue:String;
+	private var m_stopOpeningValue:Boolean = false;
 	private var m_itemSellCount:Number = 0;
 	private var m_itemsToSell:Array = [];
 	private var m_itemsToOpen:Array = [];
@@ -71,6 +74,10 @@ class BagUtil
 		m_sellItemsCommand.SetValue(undefined);
 		m_sellItemsCommand.SignalChanged.Connect(SellItemsCommand, this);
 		
+		m_stopOpeningCommand = DistributedValue.Create("BagUtil_StopOpening");
+		m_stopOpeningCommand.SetValue(undefined);
+		m_stopOpeningCommand.SignalChanged.Connect(StopOpeningCommand, this);
+		
 		ShopInterface.SignalOpenShop.Connect(OnOpenShop, this);
 		
 		//Delay adding the buttons slightly, in case we load before the inventory
@@ -89,6 +96,8 @@ class BagUtil
 		m_openGlyphsBagsButton = undefined;
 		m_openAllBagsButton.removeMovieClip();
 		m_openAllBagsButton = undefined;
+		m_stopOpeningButton.removeMovieClip();
+		m_stopOpeningButton = undefined;
 		m_sellButton.removeMovieClip();
 		m_sellButton = undefined;
 		
@@ -100,6 +109,7 @@ class BagUtil
 		
 		m_openBagsCommand.SignalChanged.Disconnect(OpenBagsCommand, this);
 		m_sellItemsCommand.SignalChanged.Disconnect(SellItemsCommand, this);
+		m_stopOpeningCommand.SignalChanged.Disconnect(StopOpeningCommand, this);
 	}
 	
 	public function Activate(config: Archive)
@@ -132,6 +142,9 @@ class BagUtil
 		
 		m_openAllBagsButton = CreateButton(x, "m_openAllBagsButton", btnWidth, 5, 100, "All", false);
  		m_openAllBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("all"); } );
+		
+		m_stopOpeningButton = CreateButton(x, "m_stopOpeningButton", btnWidth, 5, 0, "Stop", false);
+		m_stopOpeningButton.onMousePress = Delegate.create(this, function() { this.m_stopOpeningCommand.SetValue(true); } );
 		
 		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
  		m_sellButton.onMousePress = Delegate.create(this, function() { this.m_sellItemsCommand.SetValue(true); } );
@@ -262,6 +275,7 @@ class BagUtil
 			m_OpenBagsValue = value.toLowerCase();
 			m_openBagsCommand.SetValue(undefined);
 			SetDropdownOpen(false);
+			SetStopOpeningVisible(true);
 			
 			OpenBags();
 		}
@@ -288,6 +302,11 @@ class BagUtil
 		if (m_Inventory.GetFirstFreeItemSlot() == -1)
 		{
 			OpenBagsEnded("Inventory full, stopping.");
+			return;
+		}
+		if (m_stopOpeningValue == true)
+		{
+			OpenBagsEnded("Manually stopped opening.");
 			return;
 		}
 		
@@ -321,6 +340,15 @@ class BagUtil
 		}
 	}
 	
+	function StopOpeningCommand()
+	{
+		var value:String = m_stopOpeningCommand.GetValue();
+		if (value != undefined)
+		{
+			m_stopOpeningValue = true;
+		}
+	}
+	
 	function CreateButton(root, name:String, btnWidth:Number, offsetX:Number, offsetY:Number, text:String, visible:Boolean) : MovieClip
 	{
 		var btn = root.attachMovie("ChromeButtonDark", name, root.getNextHighestDepth(), {_x:root.m_TokenButton._x - btnWidth - offsetX, _y:root.m_TokenButton._y - offsetY});
@@ -335,7 +363,8 @@ class BagUtil
 	{
 		com.GameInterface.Chat.SignalShowFIFOMessage.Emit(reason, 0);
 		
-		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(false); } );
+		SetStopOpeningVisible(false);
+		m_stopOpeningValue = false;
 	}
 	
 	function SetDropdownOpen(open:Boolean)
@@ -347,6 +376,15 @@ class BagUtil
 			m_openGlyphsBagsButton._visible = open;
 			m_openAllBagsButton._visible = open;
 			m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(!open); } );
+		}
+	}
+	
+	function SetStopOpeningVisible(visible:Boolean)
+	{
+		if (visible != undefined)
+		{
+			m_openDropdownButton._visible = !visible;
+			m_stopOpeningButton._visible = visible;
 		}
 	}
 }
