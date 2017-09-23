@@ -17,13 +17,10 @@ class BagUtil
 {    
 	private var m_swfRoot: MovieClip;
 	
-	private var m_openDropdownButton: MovieClip
-	private var m_openWeaponsBagsButton: MovieClip
-	private var m_openTalismansBagsButton: MovieClip
-	private var m_openGlyphsBagsButton: MovieClip
-	private var m_openAllBagsButton: MovieClip
-	private var m_stopOpeningButton: MovieClip
-	private var m_sellButton: MovieClip
+    private var m_openDropdownButton:MovieClip;
+    private var m_stopOpeningButton:MovieClip;
+    private var m_sellButton:MovieClip;
+    private var m_dropdownButtons:Array = [];
 	
 	private var m_openBagsCommand:DistributedValue;
 	private var m_sellItemsCommand:DistributedValue;
@@ -82,14 +79,11 @@ class BagUtil
 	{
 		m_openDropdownButton.removeMovieClip(); 
 		m_openDropdownButton = undefined;
-		m_openWeaponsBagsButton.removeMovieClip();
-		m_openWeaponsBagsButton = undefined;
-		m_openTalismansBagsButton.removeMovieClip();
-		m_openTalismansBagsButton = undefined;
-		m_openGlyphsBagsButton.removeMovieClip();
-		m_openGlyphsBagsButton = undefined;
-		m_openAllBagsButton.removeMovieClip();
-		m_openAllBagsButton = undefined;
+        var button;
+        while (button = m_dropdownButtons.pop())
+        {
+            button.removeMovieClip();
+        }
 		m_stopOpeningButton.removeMovieClip();
 		m_stopOpeningButton = undefined;
 		m_sellButton.removeMovieClip();
@@ -122,19 +116,12 @@ class BagUtil
 		var btnWidth = 65;
 		
 		m_openDropdownButton = CreateButton(x, "m_openButton", btnWidth, 5, 0, "Open...", true);
-		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(true); } );
+		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(!this.m_dropdownButtons[0]._visible); } );
 		
-		m_openWeaponsBagsButton = CreateButton(x, "m_openWeaponsBagsButton", btnWidth, 5, 25, "Weapons", false);
- 		m_openWeaponsBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("weapon"); } );
-
-		m_openTalismansBagsButton = CreateButton(x, "m_openTalismansBagsButton", btnWidth, 5, 50, "Talismans", false);
- 		m_openTalismansBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("talisman"); } );
-		
-		m_openGlyphsBagsButton = CreateButton(x, "m_openGlyphsBagsButton", btnWidth, 5, 75, "Glyphs", false);
-		m_openGlyphsBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("glyph"); } );
-		
-		m_openAllBagsButton = CreateButton(x, "m_openAllBagsButton", btnWidth, 5, 100, "All", false);
- 		m_openAllBagsButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("all"); } );
+        AddDropdownButton(x, "Weapons", btnWidth, "weapon");
+        AddDropdownButton(x, "Talismans", btnWidth, "talisman");
+        AddDropdownButton(x, "Glyphs", btnWidth, "glyph");
+        AddDropdownButton(x, "All", btnWidth, "all");
 		
 		m_stopOpeningButton = CreateButton(x, "m_stopOpeningButton", btnWidth, 5, 0, "Stop", false);
 		m_stopOpeningButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("stop"); } );
@@ -355,14 +342,8 @@ class BagUtil
 	
 	function SetDropdownOpen(open:Boolean)
 	{
-		if (open != undefined)
-		{
-			m_openWeaponsBagsButton._visible = open;
-			m_openTalismansBagsButton._visible = open;
-			m_openGlyphsBagsButton._visible = open;
-			m_openAllBagsButton._visible = open;
-			m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(!open); } );
-		}
+        for (var i = 0; i < m_dropdownButtons.length; i++)
+            m_dropdownButtons[i]._visible = open;
 	}
 	
 	function SetStopOpeningVisible(visible:Boolean)
@@ -370,4 +351,12 @@ class BagUtil
         m_openDropdownButton._visible = !visible;
         m_stopOpeningButton._visible = visible;
 	}
+    
+    function AddDropdownButton(parent:MovieClip, text:String, width:Number, commandParameter:String)
+    {
+        var yOffset = 25 + m_dropdownButtons.length * 25;
+        var newButton = CreateButton(parent, "m_openDropdown"+parent.UID(), width, 5, yOffset, text, false);
+        newButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue(commandParameter); } );
+        m_dropdownButtons.push(newButton);
+    }
 }
