@@ -39,6 +39,7 @@ class BagUtil
 	static var TALISMAN_BAGS:Array = [LDBFormat.LDBGetText(50200, 9264943)];
 	static var WEAPON_BAGS:Array = [LDBFormat.LDBGetText(50200, 9289681)];
 	static var GLYPH_BAGS:Array = [LDBFormat.LDBGetText(50200, 7719874), LDBFormat.LDBGetText(50200, 9284361)];
+    static var CONTAINER_KEYS:Array = [LDBFormat.LDBGetText(50200, 9338616)];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -118,6 +119,7 @@ class BagUtil
 		m_openDropdownButton = CreateButton(x, "m_openButton", btnWidth, 5, 0, "Open...", true);
 		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(!this.m_dropdownButtons[0]._visible); } );
 		
+        AddDropdownButton(x, "Keys", btnWidth, "key");
         AddDropdownButton(x, "Weapons", btnWidth, "weapon");
         AddDropdownButton(x, "Talismans", btnWidth, "talisman");
         AddDropdownButton(x, "Glyphs", btnWidth, "glyph");
@@ -274,6 +276,10 @@ class BagUtil
 			return true;
 		}
 		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "glyph") && Utils.Contains(GLYPH_BAGS, item.m_Name))
+		{
+			return true;
+		}
+        if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "key") && Utils.Contains(CONTAINER_KEYS, item.m_Name))
 		{
 			return true;
 		}
