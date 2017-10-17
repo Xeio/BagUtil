@@ -20,7 +20,8 @@ class BagUtil
     private var m_openDropdownButton:MovieClip;
     private var m_stopOpeningButton:MovieClip;
     private var m_sellButton:MovieClip;
-    private var m_dropdownButtons:Array = [];
+    private var m_openDropdownButtons:Array = [];
+    private var m_sellDropdownButtons:Array = [];
 	
 	private var m_openBagsCommand:DistributedValue;
 	private var m_sellItemsCommand:DistributedValue;
@@ -40,6 +41,12 @@ class BagUtil
 	static var WEAPON_BAGS:Array = [LDBFormat.LDBGetText(50200, 9289681)];
 	static var GLYPH_BAGS:Array = [LDBFormat.LDBGetText(50200, 7719874), LDBFormat.LDBGetText(50200, 9284361)];
     static var CONTAINER_KEYS:Array = [LDBFormat.LDBGetText(50200, 9338616)];
+    
+    static var CONTAINER_CLOTHING:Array = [
+    LDBFormat.LDBGetText(50200, 9339631), LDBFormat.LDBGetText(50200, 9339634), LDBFormat.LDBGetText(50200, 9339639), //Shirt
+    LDBFormat.LDBGetText(50200, 9339642), LDBFormat.LDBGetText(50200, 9339644), LDBFormat.LDBGetText(50200, 9339646), //Pants+Skirt
+    LDBFormat.LDBGetText(50200, 9339653), LDBFormat.LDBGetText(50200, 9339655), LDBFormat.LDBGetText(50200, 9339663)  //Sneakers
+    ];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -81,7 +88,11 @@ class BagUtil
 		m_openDropdownButton.removeMovieClip(); 
 		m_openDropdownButton = undefined;
         var button;
-        while (button = m_dropdownButtons.pop())
+        while (button = m_openDropdownButtons.pop())
+        {
+            button.removeMovieClip();
+        }
+        while (button = m_sellDropdownButtons.pop())
         {
             button.removeMovieClip();
         }
@@ -117,20 +128,34 @@ class BagUtil
 		var btnWidth = 65;
 		
 		m_openDropdownButton = CreateButton(x, "m_openButton", btnWidth, 5, 0, "Open...", true);
-		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetDropdownOpen(!this.m_dropdownButtons[0]._visible); } );
+		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetOpenDropdownVisible(!this.m_openDropdownButtons[0]._visible); } );
 		
-        AddDropdownButton(x, "Keys", btnWidth, "key");
-        AddDropdownButton(x, "Weapons", btnWidth, "weapon");
-        AddDropdownButton(x, "Talismans", btnWidth, "talisman");
-        AddDropdownButton(x, "Glyphs", btnWidth, "glyph");
-        AddDropdownButton(x, "All", btnWidth, "all");
+        AddOpenDropdownButton(x, "Keys", btnWidth, "key");
+        AddOpenDropdownButton(x, "Weapons", btnWidth, "weapon");
+        AddOpenDropdownButton(x, "Talismans", btnWidth, "talisman");
+        AddOpenDropdownButton(x, "Glyphs", btnWidth, "glyph");
+        AddOpenDropdownButton(x, "All", btnWidth, "all");
 		
 		m_stopOpeningButton = CreateButton(x, "m_stopOpeningButton", btnWidth, 5, 0, "Stop", false);
 		m_stopOpeningButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue("stop"); } );
-		
+        
 		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
- 		m_sellButton.onMousePress = Delegate.create(this, function() { this.m_sellItemsCommand.SetValue(true); } );
+ 		m_sellButton.onMousePress = Delegate.create(this, SellButtonPress);
+        
+        AddSellRightClickDropdownButton(x, "Outfit", 50, DeleteContainerClothing);
 	}
+    
+    private function SellButtonPress(buttonIndex:Number)
+    {
+        if (buttonIndex == 1)
+        {
+            this.m_sellItemsCommand.SetValue(true);
+        }
+        else if (buttonIndex == 2)
+        {
+            SetSellDropdownVisible(!this.m_sellDropdownButtons[0]._visible);
+        }
+    }
 	
 	private function ItemIsSafeToSell(item:InventoryItem):Boolean
 	{
@@ -159,6 +184,7 @@ class BagUtil
 	{
 		m_OpenShop = undefined;
 		m_sellButton._visible = false;
+        SetSellDropdownVisible(false);
 	}
 	
 	function SellItemsCommand()
@@ -258,7 +284,7 @@ class BagUtil
 			m_openBagsCommand.SetValue(undefined);
             if (m_OpenBagsValue != "stop")
             {
-                SetDropdownOpen(false);
+                SetOpenDropdownVisible(false);
                 SetStopOpeningVisible(true);
                 
                 OpenBags();    
@@ -346,10 +372,16 @@ class BagUtil
 		SetStopOpeningVisible(false);
 	}
 	
-	function SetDropdownOpen(open:Boolean)
+	function SetOpenDropdownVisible(open:Boolean)
 	{
-        for (var i = 0; i < m_dropdownButtons.length; i++)
-            m_dropdownButtons[i]._visible = open;
+        for (var i = 0; i < m_openDropdownButtons.length; i++)
+            m_openDropdownButtons[i]._visible = open;
+	}
+    
+    function SetSellDropdownVisible(open:Boolean)
+	{
+        for (var i = 0; i < m_sellDropdownButtons.length; i++)
+            m_sellDropdownButtons[i]._visible = open;
 	}
 	
 	function SetStopOpeningVisible(visible:Boolean)
@@ -358,11 +390,42 @@ class BagUtil
         m_stopOpeningButton._visible = visible;
 	}
     
-    function AddDropdownButton(parent:MovieClip, text:String, width:Number, commandParameter:String)
+    function AddOpenDropdownButton(parent:MovieClip, text:String, width:Number, commandParameter:String)
     {
-        var yOffset = 25 + m_dropdownButtons.length * 25;
+        var yOffset = 25 + m_openDropdownButtons.length * 25;
         var newButton = CreateButton(parent, "m_openDropdown"+parent.UID(), width, 5, yOffset, text, false);
         newButton.onMousePress = Delegate.create(this, function() { this.m_openBagsCommand.SetValue(commandParameter); } );
-        m_dropdownButtons.push(newButton);
+        m_openDropdownButtons.push(newButton);
+        return newButton;
+    }
+    
+    function AddSellRightClickDropdownButton(parent:MovieClip, text:String, width:Number, onPress:Function)
+    {
+        var yOffset = 25 + m_sellDropdownButtons.length * 25;
+        var newButton = CreateButton(parent, "m_openDropdown"+parent.UID(), width, 75, yOffset, text, false);
+        newButton.onMousePress = Delegate.create(this, onPress);
+        m_sellDropdownButtons.push(newButton);
+        return newButton;
+    }
+    
+    function DeleteContainerClothing()
+    {
+        SetSellDropdownVisible(false);
+        
+        var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
+        for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
+        for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
+        {
+            var itemSlot = defaultBag.GetItemAtGridPosition(new Point(j, i));
+            var item:InventoryItem = itemSlot.GetData();
+
+            if (item != undefined && Utils.Contains(CONTAINER_CLOTHING, item.m_Name))
+            {
+                if (item.m_ItemTypeGUI == 57339111) //Sanity check that this is a clothing item we're about to delete
+                {
+                    m_Inventory.DeleteItem(item.m_InventoryPos);
+                }
+            }
+        }
     }
 }
