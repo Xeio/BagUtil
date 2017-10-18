@@ -47,6 +47,18 @@ class BagUtil
     LDBFormat.LDBGetText(50200, 9339642), LDBFormat.LDBGetText(50200, 9339644), LDBFormat.LDBGetText(50200, 9339646), //Pants+Skirt
     LDBFormat.LDBGetText(50200, 9339653), LDBFormat.LDBGetText(50200, 9339655), LDBFormat.LDBGetText(50200, 9339663)  //Sneakers
     ];
+    
+    static var CONTAINER_JUNK:Array = [
+        LDBFormat.LDBGetText(50200, 9338918), //The Mistress's Bashosen
+        LDBFormat.LDBGetText(50200, 9338745), //Primeval Jötunn Cranial Fragment
+        LDBFormat.LDBGetText(50200, 9338727), //True Ancile of the Salii
+        LDBFormat.LDBGetText(50200, 9339531), //Kris Setan Kober
+        LDBFormat.LDBGetText(50200, 9338829), //Shard of Sessho-seki
+        LDBFormat.LDBGetText(50200, 9339702), //Asibikaashi's Hoop
+        LDBFormat.LDBGetText(50200, 9338717), //Ningishzida's Rod
+        LDBFormat.LDBGetText(50200, 9338843), //Ausadhirdipyamanas Seeds
+        LDBFormat.LDBGetText(50200, 9338845) //Preta
+    ];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -142,7 +154,8 @@ class BagUtil
 		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
  		m_sellButton.onMousePress = Delegate.create(this, SellButtonPress);
         
-        AddSellRightClickDropdownButton(x, "Outfit", 50, DeleteContainerClothing);
+        AddSellRightClickDropdownButton(x, "Destroy Clothing", 100, DeleteContainerClothing);
+        AddSellRightClickDropdownButton(x, "Container Junk", 100, SellContainerJunk);
 	}
     
     private function SellButtonPress(buttonIndex:Number)
@@ -166,6 +179,14 @@ class BagUtil
 		if (item.m_IsBoundToPlayer) return false; //Bound items
 		return true;
 	}
+    
+    private function ItemIsContainerJunk(item:InventoryItem):Boolean
+	{
+        if (item.m_IsBoundToPlayer) return false; //Bound items
+        if (!Utils.Contains(CONTAINER_JUNK, item.m_Name)) return false;
+		if (item.m_Rarity != 4 && item.m_Rarity != 5) return false; //Yellow or Purple junk only
+		return true;
+	}
 	
 	private function ItemIsExtraordinary(item:InventoryItem)
 	{
@@ -186,6 +207,13 @@ class BagUtil
 		m_sellButton._visible = false;
         SetSellDropdownVisible(false);
 	}
+    
+    function SellContainerJunk()
+    {
+        BuildContainerJunkSellList();
+        PreSellSetup();
+        SellItems();
+    }
 	
 	function SellItemsCommand()
 	{
@@ -194,21 +222,26 @@ class BagUtil
 		{
 			m_sellItemsCommand.SetValue(undefined);
 			BuildSellList();
-			
-			//It's slow to have all the currency listeners trigger while selling, so just... stop them... for now.
-			var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
-			m_storedSignalListeners = character.SignalTokenAmountChanged["m_EventList"];
-			character.SignalTokenAmountChanged["m_EventList"] = new Array();
-			m_storedTokenTotals = new Array();
-			character.SignalTokenAmountChanged.Connect(SlotTokenChanged, this);
-            m_resetListsFunction = _root.shopcontroller.m_Window.m_Content.ResetList;
-            _root.shopcontroller.m_Window.m_Content.ResetList = undefined;
-            m_LayoutFunction = _root.shopcontroller.m_Window.m_Content.Layout;
-            _root.shopcontroller.m_Window.m_Content.Layout = undefined;
-			
+			PreSellSetup();
 			setTimeout(Delegate.create(this, SellItems), 500);
 		}
 	}
+    
+    private function PreSellSetup()
+    {
+        if (m_storedSignalListeners) return;
+        
+        //It's slow to have all the currency listeners trigger while selling, so just... stop them... for now.
+        var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
+        m_storedSignalListeners = character.SignalTokenAmountChanged["m_EventList"];
+        character.SignalTokenAmountChanged["m_EventList"] = new Array();
+        m_storedTokenTotals = new Array();
+        character.SignalTokenAmountChanged.Connect(SlotTokenChanged, this);
+        m_resetListsFunction = _root.shopcontroller.m_Window.m_Content.ResetList;
+        _root.shopcontroller.m_Window.m_Content.ResetList = undefined;
+        m_LayoutFunction = _root.shopcontroller.m_Window.m_Content.Layout;
+        _root.shopcontroller.m_Window.m_Content.Layout = undefined;
+    }
 	
 	private function SlotTokenChanged(tokenID:Number, newAmount:Number, oldAmount:Number)
 	{
@@ -244,6 +277,22 @@ class BagUtil
 		}
 		m_itemSellCount = m_itemsToSell.length;
 	}
+    
+    function BuildContainerJunkSellList()
+    {
+        var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
+        for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
+        for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
+        {
+            var item:InventoryItem = defaultBag.GetItemAtGridPosition(new Point(j, i)).GetData();
+
+            if (item != undefined && ItemIsContainerJunk(item))
+            {
+                m_itemsToSell.push(item);
+            }
+        }
+        m_itemSellCount = m_itemsToSell.length;
+    }
 	
 	function SellItems()
 	{
@@ -260,6 +309,7 @@ class BagUtil
             _root.shopcontroller.m_Window.m_Content.Layout = m_LayoutFunction;
 			var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
 			character.SignalTokenAmountChanged["m_EventList"] = m_storedSignalListeners;
+            m_storedSignalListeners = undefined;
 			for (var tokenType in m_storedTokenTotals)
 			{
 				character.SignalTokenAmountChanged.Emit(tokenType, m_storedTokenTotals[tokenType].newAmount, m_storedTokenTotals[tokenType].oldAmount);
@@ -291,6 +341,7 @@ class BagUtil
             }
 		}
 	}
+    
 	private function ShouldOpenItem(item:InventoryItem):Boolean
 	{
 		if ((m_OpenBagsValue == "all" || m_OpenBagsValue == "weapon") && Utils.Contains(WEAPON_BAGS, item.m_Name))
