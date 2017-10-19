@@ -304,12 +304,15 @@ class BagUtil
 		}
 		else
 		{
-			//Restore the token change signals, and emit the "final" change values
-            _root.shopcontroller.m_Window.m_Content.ResetList = m_resetListsFunction;
-            _root.shopcontroller.m_Window.m_Content.Layout = m_LayoutFunction;
-			var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
-			character.SignalTokenAmountChanged["m_EventList"] = m_storedSignalListeners;
-            m_storedSignalListeners = undefined;
+            var character:Character = Character.GetCharacter(CharacterBase.GetClientCharID());
+            if (m_storedSignalListeners)
+            {
+                //Restore the token change signals, and emit the "final" change values
+                _root.shopcontroller.m_Window.m_Content.ResetList = m_resetListsFunction;
+                _root.shopcontroller.m_Window.m_Content.Layout = m_LayoutFunction;                
+                character.SignalTokenAmountChanged["m_EventList"] = m_storedSignalListeners;
+                m_storedSignalListeners = undefined;
+            }
 			for (var tokenType in m_storedTokenTotals)
 			{
 				character.SignalTokenAmountChanged.Emit(tokenType, m_storedTokenTotals[tokenType].newAmount, m_storedTokenTotals[tokenType].oldAmount);
