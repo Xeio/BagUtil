@@ -57,6 +57,8 @@ class BagUtil
         LDBFormat.LDBGetText(50200, 9339702), //Asibikaashi's Hoop
         LDBFormat.LDBGetText(50200, 9338717), //Ningishzida's Rod
         LDBFormat.LDBGetText(50200, 9338843), //Ausadhirdipyamanas Seeds
+        LDBFormat.LDBGetText(50200, 9339630), //Ring of Mudarra
+        LDBFormat.LDBGetText(50200, 9337459), //Boincan Flask
         LDBFormat.LDBGetText(50200, 9338845) //Preta
     ];
 	
