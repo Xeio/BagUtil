@@ -21,3 +21,9 @@ Will sell all junk opened from the bags to a vendor with the following criteria.
 * Item must be unranked (no levels and no XP)
 * 1 and 2 pip Extraordinary items will be sold, but they will after all other items (and be available in buyback)
 
+
+There are also right click options on each button related to Tokyo container items:
+
+Right clicking "Open" will provide an option to delete all Tokyo container clothing items.
+
+Right clicking "Sell" provides an option to sell all unbound Tokyo container gadgets less than Legendary quality.
