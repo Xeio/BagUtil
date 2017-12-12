@@ -21,6 +21,7 @@ class BagUtil
     private var m_stopOpeningButton:MovieClip;
     private var m_sellButton:MovieClip;
     private var m_openDropdownButtons:Array = [];
+    private var m_sellRightDropdownButtons:Array = [];
     private var m_sellDropdownButtons:Array = [];
 	
 	private var m_openBagsCommand:DistributedValue;
@@ -110,6 +111,10 @@ class BagUtil
         {
             button.removeMovieClip();
         }
+        while (button = m_sellRightDropdownButtons.pop())
+        {
+            button.removeMovieClip();
+        }
 		m_stopOpeningButton.removeMovieClip();
 		m_stopOpeningButton = undefined;
 		m_sellButton.removeMovieClip();
@@ -142,7 +147,7 @@ class BagUtil
 		var btnWidth = 65;
 		
 		m_openDropdownButton = CreateButton(x, "m_openButton", btnWidth, 5, 0, "Open...", true);
-		m_openDropdownButton.onMousePress = Delegate.create(this, function() { this.SetOpenDropdownVisible(!this.m_openDropdownButtons[0]._visible); } );
+		m_openDropdownButton.onMousePress = Delegate.create(this, OpenButtonPress);
 		
         AddOpenDropdownButton(x, "Keys", btnWidth, "key");
         AddOpenDropdownButton(x, "Weapons", btnWidth, "weapon");
@@ -156,15 +161,31 @@ class BagUtil
 		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
  		m_sellButton.onMousePress = Delegate.create(this, SellButtonPress);
         
-        AddSellRightClickDropdownButton(x, "Destroy Clothing", 100, DeleteContainerClothing);
+        AddOpenRightClickDropdownButton(x, "Destroy Clothing", 100, DeleteContainerClothing);
+        
         AddSellRightClickDropdownButton(x, "Container Junk", 100, SellContainerJunk);
 	}
+    
+    private function OpenButtonPress(buttonIndex:Number)
+    {
+        if (buttonIndex == 1)
+        {
+            SetOpenDropdownVisible(!this.m_openDropdownButtons[0]._visible);
+            SetOpenRightClickDropdownVisible(false);
+        }
+        else if (buttonIndex == 2)
+        {
+            SetOpenRightClickDropdownVisible(!this.m_sellRightDropdownButtons[0]._visible);
+            SetOpenDropdownVisible(false);
+        }
+    }
     
     private function SellButtonPress(buttonIndex:Number)
     {
         if (buttonIndex == 1)
         {
             this.m_sellItemsCommand.SetValue(true);
+            SetSellDropdownVisible(false);
         }
         else if (buttonIndex == 2)
         {
@@ -212,6 +233,7 @@ class BagUtil
     
     function SellContainerJunk()
     {
+        SetSellDropdownVisible(false);
         BuildContainerJunkSellList();
         PreSellSetup();
         SellItems();
@@ -434,6 +456,12 @@ class BagUtil
             m_openDropdownButtons[i]._visible = open;
 	}
     
+    function SetOpenRightClickDropdownVisible(open:Boolean)
+	{
+        for (var i = 0; i < m_sellRightDropdownButtons.length; i++)
+            m_sellRightDropdownButtons[i]._visible = open;
+	}
+    
     function SetSellDropdownVisible(open:Boolean)
 	{
         for (var i = 0; i < m_sellDropdownButtons.length; i++)
@@ -455,10 +483,19 @@ class BagUtil
         return newButton;
     }
     
+    function AddOpenRightClickDropdownButton(parent:MovieClip, text:String, width:Number, onPress:Function)
+    {
+        var yOffset = 25 + m_sellRightDropdownButtons.length * 25;
+        var newButton = CreateButton(parent, "m_openRightDropdown"+parent.UID(), width, 5, yOffset, text, false);
+        newButton.onMousePress = Delegate.create(this, onPress);
+        m_sellRightDropdownButtons.push(newButton);
+        return newButton;
+    }
+    
     function AddSellRightClickDropdownButton(parent:MovieClip, text:String, width:Number, onPress:Function)
     {
         var yOffset = 25 + m_sellDropdownButtons.length * 25;
-        var newButton = CreateButton(parent, "m_openDropdown"+parent.UID(), width, 75, yOffset, text, false);
+        var newButton = CreateButton(parent, "m_sellRightDropdown"+parent.UID(), width, 75, yOffset, text, false);
         newButton.onMousePress = Delegate.create(this, onPress);
         m_sellDropdownButtons.push(newButton);
         return newButton;
@@ -466,7 +503,7 @@ class BagUtil
     
     function DeleteContainerClothing()
     {
-        SetSellDropdownVisible(false);
+        SetOpenRightClickDropdownVisible(false);
         
         var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
         for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
