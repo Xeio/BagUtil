@@ -62,6 +62,8 @@ class BagUtil
         LDBFormat.LDBGetText(50200, 9337459), //Boincan Flask
         LDBFormat.LDBGetText(50200, 9338845) //Preta
     ];
+    
+    static var KRAMPUS_ROCKETS:Array = [LDBFormat.LDBGetText(50200, 8396933)];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -162,6 +164,11 @@ class BagUtil
  		m_sellButton.onMousePress = Delegate.create(this, SellButtonPress);
         
         AddOpenRightClickDropdownButton(x, "Destroy Clothing", 100, DeleteContainerClothing);
+        var currentDate:Date = new Date();
+        if ((currentDate.getMonth() == 11 && currentDate.getDate() > 8) || (currentDate.getMonth() == 0 && currentDate.getDate() < 5))
+        {
+            AddOpenRightClickDropdownButton(x, "Destroy Krampus", 100, DeleteKrampusRockets);
+        }
         
         AddSellRightClickDropdownButton(x, "Container Junk", 100, SellContainerJunk);
 	}
@@ -515,6 +522,27 @@ class BagUtil
             if (item != undefined && Utils.Contains(CONTAINER_CLOTHING, item.m_Name))
             {
                 if (item.m_ItemTypeGUI == 57339111) //Sanity check that this is a clothing item we're about to delete
+                {
+                    m_Inventory.DeleteItem(item.m_InventoryPos);
+                }
+            }
+        }
+    }
+    
+    function DeleteKrampusRockets()
+    {
+        SetOpenRightClickDropdownVisible(false);
+        
+        var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
+        for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
+        for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
+        {
+            var itemSlot = defaultBag.GetItemAtGridPosition(new Point(j, i));
+            var item:InventoryItem = itemSlot.GetData();
+
+            if (item != undefined && Utils.Contains(KRAMPUS_ROCKETS, item.m_Name))
+            {
+                if (item.m_Rarity == 1) //Sanity check this is common
                 {
                     m_Inventory.DeleteItem(item.m_InventoryPos);
                 }
