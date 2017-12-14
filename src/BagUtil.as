@@ -64,6 +64,7 @@ class BagUtil
     ];
     
     static var KRAMPUS_ROCKETS:Array = [LDBFormat.LDBGetText(50200, 8396933)];
+    static var KRAMPUS_PRESENTS:Array = [LDBFormat.LDBGetText(50200, 8396874), LDBFormat.LDBGetText(50200, 8396885), LDBFormat.LDBGetText(50200, 8397420)];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -85,7 +86,8 @@ class BagUtil
 		var clientCharacterInstanceID:Number = CharacterBase.GetClientCharID().GetInstance();
         
         m_Inventory = new Inventory(new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_BackpackContainer, clientCharacterInstanceID));
-				
+        m_Inventory.SignalItemAdded.Connect(OnSignalItemAdded, this)
+        
 		m_openBagsCommand = DistributedValue.Create("BagUtil_OpenBags");
 		m_openBagsCommand.SetValue(undefined);
 		m_openBagsCommand.SignalChanged.Connect(OpenBagsCommand, this);
@@ -128,6 +130,7 @@ class BagUtil
 			m_OpenShop.SignalCloseShop.Disconnect(OnCloseShop, this);
 		}
 		
+        m_Inventory.SignalItemAdded.Disconnect(OnSignalItemAdded, this);
 		m_openBagsCommand.SignalChanged.Disconnect(OpenBagsCommand, this);
 		m_sellItemsCommand.SignalChanged.Disconnect(SellItemsCommand, this);
 	}
@@ -546,6 +549,18 @@ class BagUtil
                 {
                     m_Inventory.DeleteItem(item.m_InventoryPos);
                 }
+            }
+        }
+    }
+    
+    function OnSignalItemAdded(inventoryID:com.Utils.ID32, itemPos:Number)
+    {
+        var item:InventoryItem = m_Inventory.GetItemAt(itemPos);
+        if (Utils.Contains(KRAMPUS_PRESENTS, item.m_Name))
+        {
+            if (item.m_Rarity == 3) //Sanity check this is blue
+            {
+                m_Inventory.UseItem(itemPos);
             }
         }
     }
