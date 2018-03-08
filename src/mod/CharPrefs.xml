@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?> 
 <Root>
   <Value name="BagUtil" value="true" />
+    <Value name="BagUtil_DistillateDeletionMax" value="500" />
   <Archive name="BagUtil_Cfg" />
 </Root>

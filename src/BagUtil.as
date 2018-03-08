@@ -1,5 +1,6 @@
 import xeio.Utils;
 import com.GameInterface.DistributedValue;
+import com.GameInterface.DistributedValueBase;
 import com.GameInterface.InventoryItem;
 import com.GameInterface.Game.Character;
 import com.GameInterface.ShopInterface;
@@ -166,7 +167,8 @@ class BagUtil
 		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
  		m_sellButton.onMousePress = Delegate.create(this, SellButtonPress);
         
-        AddOpenRightClickDropdownButton(x, "Destroy Clothing", 100, DeleteContainerClothing);
+        AddOpenRightClickDropdownButton(x, "Destroy Clothing", 130, DeleteContainerClothing);
+        AddOpenRightClickDropdownButton(x, "Destroy Distillates", 130, DeleteDistillates);
         var currentDate:Date = new Date();
         if ((currentDate.getMonth() == 11 && currentDate.getDate() > 8) || (currentDate.getMonth() == 0 && currentDate.getDate() < 5))
         {
@@ -563,5 +565,49 @@ class BagUtil
                 m_Inventory.UseItem(itemPos);
             }
         }
+    }
+    
+    function DeleteDistillates()
+    {
+        SetOpenRightClickDropdownVisible(false);
+        
+        var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
+        for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
+        for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
+        {
+            var itemSlot = defaultBag.GetItemAtGridPosition(new Point(j, i));
+            var item:InventoryItem = itemSlot.GetData();
+
+            if (item != undefined)
+            {
+                if(item.m_Name.indexOf("stillat") != -1 && (item.m_Name.indexOf("cc)") != -1 || item.m_Name.indexOf("cm3)") != -1))
+                {                    
+                    if (DistillateValueIsBelowThreshold(item.m_Name))
+                    {
+                        m_Inventory.DeleteItem(item.m_InventoryPos);
+                    }
+                }
+            }
+        }
+    }
+    
+    function DistillateValueIsBelowThreshold(name: String) : Boolean
+    {
+        var numberString = ""
+        for (var i = 0; i < name.length; i++)
+        {
+            if (!isNaN(Number(name.charAt(i))))
+            {
+                numberString = numberString + name.charAt(i);
+            }
+        }
+        var distillateValue = Number(numberString);
+        
+        var maxToDelete: Number = DistributedValueBase.GetDValue("BagUtil_DistillateDeletionMax");
+        if (maxToDelete > 0 && distillateValue > 0 && maxToDelete > distillateValue)
+        {
+            return true;   
+        }
+        return false;
     }
 }
