@@ -21,9 +21,9 @@ class BagUtil
     private var m_openDropdownButton:MovieClip;
     private var m_stopOpeningButton:MovieClip;
     private var m_sellButton:MovieClip;
-    private var m_openDropdownButtons:Array = [];
-    private var m_sellRightDropdownButtons:Array = [];
-    private var m_sellDropdownButtons:Array = [];
+    private var m_openDropdownButtons:Array;
+    private var m_sellRightDropdownButtons:Array;
+    private var m_sellDropdownButtons:Array;
 	
 	private var m_openBagsCommand:DistributedValue;
 	private var m_sellItemsCommand:DistributedValue;
@@ -85,6 +85,10 @@ class BagUtil
 	
 	public function OnLoad()
 	{
+        m_openDropdownButtons = [];
+        m_sellRightDropdownButtons = [];
+        m_sellDropdownButtons = [];
+        
 		var clientCharacterInstanceID:Number = CharacterBase.GetClientCharID().GetInstance();
         
         m_Inventory = new Inventory(new com.Utils.ID32(_global.Enums.InvType.e_Type_GC_BackpackContainer, clientCharacterInstanceID));
