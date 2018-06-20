@@ -580,7 +580,9 @@ class BagUtil
 
             if (item != undefined)
             {
-                if(item.m_Name.indexOf("stillat") != -1 && (item.m_Name.indexOf("cc)") != -1 || item.m_Name.indexOf("cm3)") != -1))
+                if (item.m_Name.indexOf("stillat") != -1 && //Distillate check
+                (item.m_Name.indexOf("cc)") != -1 || item.m_Name.indexOf("cm3)") != -1) && //Additional distillate check
+                item.m_Name.indexOf("Gereinigtes") == -1  && item.m_Name.indexOf("urifi") == -1) //Make sure it's not "purified"
                 {                    
                     if (DistillateValueIsBelowThreshold(item.m_Name))
                     {
