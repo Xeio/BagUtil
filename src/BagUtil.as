@@ -66,6 +66,7 @@ class BagUtil
     
     static var KRAMPUS_ROCKETS:Array = [LDBFormat.LDBGetText(50200, 8396933)];
     static var KRAMPUS_PRESENTS:Array = [LDBFormat.LDBGetText(50200, 8396874), LDBFormat.LDBGetText(50200, 8396885), LDBFormat.LDBGetText(50200, 8397420)];
+    static var ANNIVERSARY_FLARES:Array = [LDBFormat.LDBGetText(50200, 8262189)];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -167,12 +168,17 @@ class BagUtil
 		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
  		m_sellButton.onMousePress = Delegate.create(this, SellButtonPress);
         
-        AddOpenRightClickDropdownButton(x, "Destroy Clothing", 130, DeleteContainerClothing);
-        AddOpenRightClickDropdownButton(x, "Destroy Distillates", 130, DeleteDistillates);
+        btnWidth = 130;
+        AddOpenRightClickDropdownButton(x, "Destroy Clothing", btnWidth, DeleteContainerClothing);
+        AddOpenRightClickDropdownButton(x, "Destroy Distillates", btnWidth, DeleteDistillates);
         var currentDate:Date = new Date();
         if ((currentDate.getMonth() == 11 && currentDate.getDate() > 8) || (currentDate.getMonth() == 0 && currentDate.getDate() < 5))
         {
-            AddOpenRightClickDropdownButton(x, "Destroy Krampus", 100, DeleteKrampusRockets);
+            AddOpenRightClickDropdownButton(x, "Destroy Krampus", btnWidth, DeleteKrampusRockets);
+        }
+        if ((currentDate.getMonth() == 5 && currentDate.getDate() > 19) || (currentDate.getMonth() == 6 && currentDate.getDate() < 12))
+        {
+            AddOpenRightClickDropdownButton(x, "Destroy Flares", btnWidth, DeleteAnniversaryFlares);
         }
         
         AddSellRightClickDropdownButton(x, "Container Junk", 100, SellContainerJunk);
@@ -538,6 +544,18 @@ class BagUtil
     {
         SetOpenRightClickDropdownVisible(false);
         
+        DeleteItem(KRAMPUS_ROCKETS);
+    }
+    
+    function DeleteAnniversaryFlares()
+    {
+        SetOpenRightClickDropdownVisible(false);
+        
+        DeleteItem(ANNIVERSARY_FLARES);
+    }
+    
+    function DeleteItem(itemsToDelete:Array)
+    {
         var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
         for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
         for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
@@ -545,12 +563,9 @@ class BagUtil
             var itemSlot = defaultBag.GetItemAtGridPosition(new Point(j, i));
             var item:InventoryItem = itemSlot.GetData();
 
-            if (item != undefined && Utils.Contains(KRAMPUS_ROCKETS, item.m_Name))
+            if (item != undefined && Utils.Contains(itemsToDelete, item.m_Name))
             {
-                if (item.m_Rarity == 1) //Sanity check this is common
-                {
-                    m_Inventory.DeleteItem(item.m_InventoryPos);
-                }
+                m_Inventory.DeleteItem(item.m_InventoryPos);
             }
         }
     }
