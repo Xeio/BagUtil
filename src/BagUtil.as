@@ -67,6 +67,7 @@ class BagUtil
     static var KRAMPUS_ROCKETS:Array = [LDBFormat.LDBGetText(50200, 8396933)];
     static var KRAMPUS_PRESENTS:Array = [LDBFormat.LDBGetText(50200, 8396874), LDBFormat.LDBGetText(50200, 8396885), LDBFormat.LDBGetText(50200, 8397420)];
     static var ANNIVERSARY_FLARES:Array = [LDBFormat.LDBGetText(50200, 8262189)];
+    static var THIRD_AGE_BAGS:Array = [LDBFormat.LDBGetText(50200, 9290325)];
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -172,9 +173,10 @@ class BagUtil
 		m_sellButton = CreateButton(x, "m_sellButton", 50, btnWidth + 10, 0, "Sell", false);
  		m_sellButton.onMousePress = Delegate.create(this, SellButtonPress);
         
-        btnWidth = 130;
+        btnWidth = 170;
         AddOpenRightClickDropdownButton(x, "Destroy Clothing", btnWidth, DeleteContainerClothing);
         AddOpenRightClickDropdownButton(x, "Destroy Distillates", btnWidth, DeleteDistillates);
+        AddOpenRightClickDropdownButton(x, "Opent Third Age Fragments", btnWidth, OpenThirdAgeFragments);
         var currentDate:Date = new Date();
         if ((currentDate.getMonth() == 11 && currentDate.getDate() > 8) || (currentDate.getMonth() == 0 && currentDate.getDate() < 5))
         {
@@ -630,5 +632,40 @@ class BagUtil
             return true;   
         }
         return false;
+    }
+    
+    function OpenThirdAgeFragments()
+    {
+        var continueOpening:Boolean = false;
+        var defaultBag/*:ItemIconBox*/ = _root.backpack2.m_IconBoxes[0];
+        for (var i:Number = 0; i < defaultBag.GetNumRows(); i++)
+        for (var j:Number = 0; j < defaultBag.GetNumColumns(); j++)
+        {
+            var itemSlot = defaultBag.GetItemAtGridPosition(new Point(j, i));
+            var item:InventoryItem = itemSlot.GetData();
+
+            if (item != undefined)
+            {
+                if (Utils.Contains(THIRD_AGE_BAGS, item.m_Name))
+                {
+                    if (!itemSlot.GetSlotMC().item.m_HasCooldown)
+                    {
+                        m_Inventory.UseItem(item.m_InventoryPos);
+                        setTimeout(Delegate.create(this, OpenThirdAgeFragments), 400);
+                        return;
+                    }
+                    continueOpening = true;
+                }
+            }
+        }
+
+        if (continueOpening)
+        {
+            setTimeout(Delegate.create(this, OpenThirdAgeFragments), 400);
+        }
+        else
+        {
+            OpenBagsEnded("All Third Age Fragment bags opened.");
+        }
     }
 }
