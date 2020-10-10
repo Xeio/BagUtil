@@ -602,10 +602,10 @@ class BagUtil
             if (item != undefined)
             {
                 if (item.m_Name.indexOf("stillat") != -1 && //Distillate check
-                (item.m_Name.indexOf("cc)") != -1 || item.m_Name.indexOf("cm3)") != -1) && //Additional distillate check
+                item.m_XP > 0 && //Additional distillate check
                 item.m_Name.indexOf("Gereinigtes") == -1  && item.m_Name.indexOf("urifi") == -1) //Make sure it's not "purified"
                 {                    
-                    if (DistillateValueIsBelowThreshold(item.m_Name))
+                    if (DistillateValueIsBelowThreshold(item))
                     {
                         m_Inventory.DeleteItem(item.m_InventoryPos);
                     }
@@ -614,20 +614,10 @@ class BagUtil
         }
     }
     
-    function DistillateValueIsBelowThreshold(name: String) : Boolean
+    function DistillateValueIsBelowThreshold(item:InventoryItem) : Boolean
     {
-        var numberString = ""
-        for (var i = 0; i < name.length; i++)
-        {
-            if (!isNaN(Number(name.charAt(i))))
-            {
-                numberString = numberString + name.charAt(i);
-            }
-        }
-        var distillateValue = Number(numberString);
-        
         var maxToDelete: Number = DistributedValueBase.GetDValue("BagUtil_DistillateDeletionMax");
-        if (maxToDelete > 0 && distillateValue > 0 && maxToDelete > distillateValue)
+        if (maxToDelete > 0 && item.m_XP > 0 && maxToDelete >= item.m_XP)
         {
             return true;   
         }
